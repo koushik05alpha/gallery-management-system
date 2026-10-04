@@ -1,7 +1,7 @@
 {
-  "name": "temp-project",
+  "name": "gallery-website",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -9,12 +9,17 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "^16.2.9",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "@mantine/core": "^7.17.0",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.1",
-    "tailwindcss": "^4.3.1"
+    "@types/node": "20.19.43",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "^18.3.1",
+    "tailwindcss": "^4.3.1",
+    "typescript": "5.9.3"
   }
 }
