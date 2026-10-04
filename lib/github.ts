@@ -1,7 +1,9 @@
+import type { GalleryData } from './images'
+
 const GITHUB_API = 'https://api.github.com'
 const DATA_PATH = 'data.json'
 
-function getHeaders() {
+function getHeaders(): HeadersInit {
   return {
     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     Accept: 'application/vnd.github.v3+json',
@@ -9,9 +11,12 @@ function getHeaders() {
   }
 }
 
-export async function readData() {
-  const url = `${GITHUB_API}/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/${DATA_PATH}`
-  const res = await fetch(url, { headers: getHeaders(), next: { revalidate: 0 } })
+function getRepoUrl(): string {
+  return `${GITHUB_API}/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/${DATA_PATH}`
+}
+
+export async function readData(): Promise<{ data: GalleryData; sha: string } | null> {
+  const res = await fetch(getRepoUrl(), { headers: getHeaders(), cache: 'no-store' })
 
   if (res.status === 404) return null
 
@@ -25,17 +30,16 @@ export async function readData() {
   return { data: JSON.parse(decoded), sha: body.sha }
 }
 
-export async function writeData(json, sha) {
-  const url = `${GITHUB_API}/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/${DATA_PATH}`
+export async function writeData(json: GalleryData, sha: string | null): Promise<string> {
   const content = Buffer.from(JSON.stringify(json, null, 2)).toString('base64')
 
-  const body = {
+  const body: { message: string; content: string; sha?: string } = {
     message: 'Update gallery data',
     content,
   }
   if (sha) body.sha = sha
 
-  const res = await fetch(url, {
+  const res = await fetch(getRepoUrl(), {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(body),

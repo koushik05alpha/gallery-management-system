@@ -1,4 +1,21 @@
-export const LOCAL_IMAGES = [
+export interface GalleryImage {
+  id: string
+  src: string
+  name: string
+  tags: string[]
+  category: string
+  deleted: boolean
+  deletedAt: number | null
+  type: string
+  createdAt: number
+}
+
+export interface GalleryData {
+  images: GalleryImage[]
+  categories: string[]
+}
+
+export const LOCAL_IMAGES: string[] = [
   'images/157035631_342870333685116_8893923160646760428_n.jpg',
   'images/90148009_1669874699832508_5680159468038389760_o.jpg',
   'images/90456547_763996314007590_3246723563259953152_n.jpg',
@@ -23,8 +40,9 @@ export const LOCAL_IMAGES = [
   'images/image-20210127171016-4.png',
 ]
 
-export function nameFromSrc(src) {
-  const parts = src.split('/').pop().split('.')
+export function nameFromSrc(src: string): string {
+  const fileName = src.split('/').pop() ?? ''
+  const parts = fileName.split('.')
   parts.pop()
   return decodeURIComponent(parts.join('.')) || 'Untitled'
 }
