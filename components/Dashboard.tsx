@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthContext'
 import { useImages } from '@/components/ImageContext'
+import type { GalleryImage } from '@/lib/images'
 
 const links = [
   { label: 'Dashboard', icon: '📊', id: 'overview' },
@@ -78,7 +79,7 @@ function OverviewSection() {
   )
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-lg border border-gray-800 p-6">
       <p className="text-sm text-gray-400">{label}</p>
@@ -89,7 +90,7 @@ function StatCard({ label, value }) {
 
 function GallerySection() {
   const { activeImages, categories, renameImage, deleteImage, addTag, removeTag, setCategory } = useImages()
-  const [selected, setSelected] = useState(null)
+  const [selected, setSelected] = useState<GalleryImage | null>(null)
   const [filter, setFilter] = useState('All')
   const [renameVal, setRenameVal] = useState('')
   const [tagVal, setTagVal] = useState('')
@@ -98,7 +99,7 @@ function GallerySection() {
 
   const filtered = filter === 'All' ? activeImages : activeImages.filter(img => img.category === filter)
 
-  const select = (img) => {
+  const select = (img: GalleryImage) => {
     setSelected(img)
     setRenameVal(img.name)
     setTagVal('')
@@ -202,11 +203,11 @@ function GallerySection() {
 
 function UploadSection() {
   const { uploadFile, addLink } = useImages()
-  const fileRef = useRef(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const [linkVal, setLinkVal] = useState('')
   const [status, setStatus] = useState('')
 
-  const handleFile = async (files) => {
+  const handleFile = async (files: FileList | null) => {
     if (!files || files.length === 0) return
     setStatus('Uploading...')
     let count = 0

@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthContext'
 import { useImages } from '@/components/ImageContext'
+import type { GalleryImage } from '@/lib/images'
 
 export default function Gallery() {
-  const [selected, setSelected] = useState(null)
+  const [selected, setSelected] = useState<GalleryImage | null>(null)
   const { isAuth } = useAuth()
   const router = useRouter()
   const { activeImages } = useImages()

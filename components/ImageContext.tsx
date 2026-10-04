@@ -1,11 +1,32 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { LOCAL_IMAGES, nameFromSrc } from '@/lib/images'
+import type { GalleryImage } from '@/lib/images'
 
-const ImageContext = createContext(null)
+interface ImageContextValue {
+  images: GalleryImage[]
+  activeImages: GalleryImage[]
+  deletedImages: GalleryImage[]
+  categories: string[]
+  loaded: boolean
+  addImage: (src: string, name?: string, type?: string) => GalleryImage
+  uploadFile: (file: File) => Promise<GalleryImage>
+  addLink: (url: string) => GalleryImage
+  deleteImage: (id: string) => void
+  restoreImage: (id: string) => void
+  emptyRecycleBin: () => void
+  renameImage: (id: string, newName: string) => void
+  addTag: (id: string, tag: string) => void
+  removeTag: (id: string, tag: string) => void
+  setCategory: (id: string, category: string) => void
+  addCategory: (name: string) => void
+}
 
-const localInitial = LOCAL_IMAGES.map((src, i) => ({
+const ImageContext = createContext<ImageContextValue | null>(null)
+
+const localInitial: GalleryImage[] = LOCAL_IMAGES.map((src, i) => ({
   id: `img_${Date.now()}_${i}`,
   src,
   name: nameFromSrc(src),
@@ -17,14 +38,14 @@ const localInitial = LOCAL_IMAGES.map((src, i) => ({
   createdAt: Date.now() - i * 60000,
 }))
 
-export function ImageProvider({ children }) {
-  const [images, setImages] = useState(localInitial)
-  const [categories, setCategories] = useState(['Uncategorized', 'Nature', 'Travel', 'People', 'Art'])
+export function ImageProvider({ children }: { children: ReactNode }) {
+  const [images, setImages] = useState<GalleryImage[]>(localInitial)
+  const [categories, setCategories] = useState<string[]>(['Uncategorized', 'Nature', 'Travel', 'People', 'Art'])
   const [loaded, setLoaded] = useState(false)
 
-  const imagesRef = useRef(images)
-  const categoriesRef = useRef(categories)
-  const saveTimer = useRef(null)
+  const imagesRef = useRef<GalleryImage[]>(images)
+  const categoriesRef = useRef<string[]>(categories)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => { imagesRef.current = images }, [images])
   useEffect(() => { categoriesRef.current = categories }, [categories])
@@ -35,9 +56,9 @@ export function ImageProvider({ children }) {
         if (!res.ok) throw new Error('No data yet')
         return res.json()
       })
-      .then(data => {
-        if (data.images?.length > 0) setImages(data.images)
-        if (data.categories?.length > 0) setCategories(data.categories)
+      .then((data: { images?: GalleryImage[]; categories?: string[] }) => {
+        if (Array.isArray(data.images)) setImages(data.images)
+        if (Array.isArray(data.categories)) setCategories(data.categories)
       })
       .catch(() => {})
       .finally(() => setLoaded(true))
@@ -56,13 +77,13 @@ export function ImageProvider({ children }) {
           }),
         })
       } catch (err) {
-        console.error('GitHub save failed:', err)
+        console.error('Save failed:', err)
       }
     }, 500)
   }, [])
 
-  const addImage = useCallback((src, name, type = 'uploaded') => {
-    const newImg = {
+  const addImage = useCallback((src: string, name?: string, type = 'uploaded'): GalleryImage => {
+    const newImg: GalleryImage = {
       id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       src,
       name: name || 'Untitled',
@@ -78,7 +99,7 @@ export function ImageProvider({ children }) {
     return newImg
   }, [saveToGitHub])
 
-  const uploadFile = useCallback(async (file) => {
+  const uploadFile = useCallback((file: File): Promise<GalleryImage> => {
     const reader = new FileReader()
     return new Promise((resolve, reject) => {
       reader.onload = async (e) => {
@@ -86,7 +107,7 @@ export function ImageProvider({ children }) {
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: e.target.result }),
+            body: JSON.stringify({ image: e.target?.result }),
           })
           const data = await res.json()
           if (!res.ok) throw new Error(data.error || 'Upload failed')
@@ -100,19 +121,19 @@ export function ImageProvider({ children }) {
     })
   }, [addImage])
 
-  const addLink = useCallback((url) => {
+  const addLink = useCallback((url: string): GalleryImage => {
     const name = url.split('/').pop()?.split('?')[0] || 'Link'
     return addImage(url, name, 'link')
   }, [addImage])
 
-  const deleteImage = useCallback((id) => {
+  const deleteImage = useCallback((id: string) => {
     setImages(prev => prev.map(img =>
       img.id === id ? { ...img, deleted: true, deletedAt: Date.now() } : img
     ))
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const restoreImage = useCallback((id) => {
+  const restoreImage = useCallback((id: string) => {
     setImages(prev => prev.map(img =>
       img.id === id ? { ...img, deleted: false, deletedAt: null } : img
     ))
@@ -124,14 +145,16 @@ export function ImageProvider({ children }) {
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const renameImage = useCallback((id, newName) => {
+  const renameImage = useCallback((id: string, newName: string) => {
+    const n = newName.trim()
+    if (!n) return
     setImages(prev => prev.map(img =>
-      img.id === id ? { ...img, name: newName } : img
+      img.id === id ? { ...img, name: n } : img
     ))
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const addTag = useCallback((id, tag) => {
+  const addTag = useCallback((id: string, tag: string) => {
     const t = tag.trim()
     if (!t) return
     setImages(prev => prev.map(img =>
@@ -142,7 +165,7 @@ export function ImageProvider({ children }) {
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const removeTag = useCallback((id, tag) => {
+  const removeTag = useCallback((id: string, tag: string) => {
     setImages(prev => prev.map(img =>
       img.id === id
         ? { ...img, tags: img.tags.filter(t => t !== tag) }
@@ -151,15 +174,17 @@ export function ImageProvider({ children }) {
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const setCategory = useCallback((id, category) => {
+  const setCategory = useCallback((id: string, category: string) => {
     setImages(prev => prev.map(img =>
       img.id === id ? { ...img, category } : img
     ))
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 
-  const addCategory = useCallback((name) => {
-    setCategories(prev => prev.includes(name) ? prev : [...prev, name])
+  const addCategory = useCallback((name: string) => {
+    const c = name.trim()
+    if (!c) return
+    setCategories(prev => prev.includes(c) ? prev : [...prev, c])
     setTimeout(saveToGitHub, 0)
   }, [saveToGitHub])
 

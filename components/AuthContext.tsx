@@ -1,12 +1,19 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 
-const AuthContext = createContext(null)
+interface AuthContextValue {
+  isAuth: boolean
+  login: (pin: string) => boolean
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
 const CORRECT_PIN = '00005'
 const STORAGE_KEY = 'gallery_auth'
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuth, setIsAuth] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -15,7 +22,7 @@ export function AuthProvider({ children }) {
     setLoaded(true)
   }, [])
 
-  const login = (pin) => {
+  const login = (pin: string) => {
     if (pin !== CORRECT_PIN) return false
     setIsAuth(true)
     localStorage.setItem(STORAGE_KEY, 'true')

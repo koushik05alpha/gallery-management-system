@@ -10,7 +10,7 @@ export default function Login() {
   const { login } = useAuth()
   const router = useRouter()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (login(pin)) {
       router.replace('/dashboard')
