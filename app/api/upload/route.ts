@@ -1,10 +1,17 @@
-export async function POST(request) {
-  const { image } = await request.json()
+export const dynamic = 'force-dynamic'
+
+export async function POST(request: Request) {
+  const { image } = (await request.json()) as { image?: string }
   if (!image) {
     return Response.json({ error: 'No image provided' }, { status: 400 })
   }
 
-  const base64 = image.includes('base64,') ? image.split('base64,')[1] : image
+  // Mock mode: no IMGBB key configured — echo the data URL back so the image still renders
+  if (!process.env.IMGBB_KEY) {
+    return Response.json({ url: image, mocked: true })
+  }
+
+  const base64 = image.includes('base64,') ? image.split('base64,')[1] ?? image : image
 
   const formData = new FormData()
   formData.append('image', base64)
