@@ -48,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The admin dashboard is at `/dashboard` (default PIN: `00005`).
+Open http://localhost:3000. The admin dashboard is at `/dashboard` (default PIN: ``).
 
 ### Production build
 
